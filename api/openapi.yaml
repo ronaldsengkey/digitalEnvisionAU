@@ -1,0 +1,248 @@
+openapi: 3.0.1
+info:
+  title: meetUp
+  description: This is a meetup server swagger openapi 3
+  contact:
+    email: agnetiuslee@gmail.com
+  version: 0.0.1
+servers:
+  - url: https://petstore.swagger.io/v2
+  - url: http://localhost/meetup/api/v1
+tags:
+  - name: meetUsers
+    description: "Operations about users account (customer, partner, employee)"
+  - name: meetAuthentications
+    description: "Handling authentication request (customer, partner, employee)"
+  - name: meetTransactions
+    description: "operations and access to transactions (orders, and payment)"
+  - name: meetServices
+    description: Operations about all of meetup services
+paths:
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      parameters:
+        - name: type
+          in: query
+          description: Tipe data yang di request
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - personal
+                - company
+              default: personal
+        - name: category
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - partner
+                - employee
+              default: customer
+      requestBody:
+        description: Created user object
+        content:
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - api_key: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: User
+  /home:
+    get:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: home
+      parameters:
+        - name: type
+          in: query
+          description: Tipe data yang di request
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - personal
+                - company
+              default: personal
+        - name: category
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - partner
+                - employee
+              default: customer
+        - name: x-api-key
+          in: header
+          description: key access
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - bearerAuth: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: User
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: userLogin
+      parameters:
+        - name: type
+          in: query
+          description: Tipe data yang di request
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - personal
+                - company
+              default: personal
+        - name: category
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - partner
+                - employee
+              default: customer
+        - name: x-api-key
+          in: header
+          description: key access
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - basicAuth: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: User
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        role:
+          type: string
+        fullName:
+          type: string
+        pin:
+          type: string
+        phone:
+          type: string
+      example:
+        fullName: Ronald
+        phone: 085854223422
+        pin: 1234
+      xml:
+        name: User
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+      example:
+        code: 0
+        type: type
+        message: message
+    pet_petId_body:
+      properties:
+        name:
+          type: string
+          description: Updated name of the pet
+        status:
+          type: string
+          description: Updated status of the pet
+    petId_uploadImage_body:
+      properties:
+        additionalMetadata:
+          type: string
+          description: Additional data to pass to server
+        file:
+          type: string
+          description: file to upload
+          format: binary
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://petstore.swagger.io/oauth/dialog
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    basicAuth:
+      type: http
+      scheme: basic
+    bearerAuth:            
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header

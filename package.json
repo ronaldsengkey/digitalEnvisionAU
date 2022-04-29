@@ -1,0 +1,30 @@
+{
+  "name": "meetup",
+  "version": "0.0.1",
+  "description": "This is a meetup server swagger openapi 3",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "nodemon index.js"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "connect": "^3.2.0",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.0",
+    "js-yaml": "^3.3.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.2.1",
+    "morgan": "^1.10.0",
+    "node-rsa": "^1.1.1",
+    "nodemon": "^2.0.15",
+    "oas3-tools": "^2.2.3",
+    "pg": "^8.7.3",
+    "restana": "^4.9.3",
+    "sqlite3": "^5.0.6"
+  }
+}
