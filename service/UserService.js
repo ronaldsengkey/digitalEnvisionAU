@@ -5,6 +5,10 @@
 // const {
 //   create
 // } = require('domain');
+
+const axios = require('axios');
+let notif= {};
+
 var path = require('path');
 const sqlite = require('sqlite3').verbose(),
   asymetric = require('./asymetrics'),
@@ -76,29 +80,99 @@ class operations {
   }
 }
 
+
+exports.jobDetail = function (data) {
+  return new Promise(function (resolve, reject) {
+     let actionAuth = data;
+    actionAuth.actions = "token";
+    let opv = new operations(actionAuth);
+    let resultToken = opv.validations();
+    if(resultToken == 401){
+        notif = {};
+        notif.responseCode = 401;
+        notif.message = "Unauthorized access !";
+    }else{
+      // Access authorized ===========
+
+      let hasil = asymetric.decryptAes(resultToken.profile);
+      let tmp = JSON.parse(hasil);
+      axios
+          .get('http://dev3.dansmultipro.co.id/api/recruitment/positions/'+data.jobId)
+          .then(resax => {
+            notif = {};
+            notif.responseCode = resax.status;
+            notif.message = "Hi "+tmp.profile+", this is your request result";
+            notif.data = resax.data;
+          })
+          .catch(error => {
+            notif = {};
+            console.error(error);
+            notif.responseCode = 500;
+            notif.message = error;
+          });
+    }
+        resolve(notif);
+  })
+}
+
 exports.home = function (data) {
   return new Promise(function (resolve, reject) {
     let actionAuth = data;
     actionAuth.actions = "token";
     let opv = new operations(actionAuth);
     let resultToken = opv.validations();
-    let notif= {};
     if(resultToken == 401){
+        notif = {};
         notif.responseCode = 401;
         notif.message = "Unauthorized access !";
     }else{
+      // Access authorized ===========
+
       let hasil = asymetric.decryptAes(resultToken.profile);
       let tmp = JSON.parse(hasil);
-      if(data.category[0] == tmp.scope && tmp.role == "admin"){
-        notif.responseCode = 200;
-        notif.message = "Hello World,"+tmp.profile+","+tmp.role;
-      }else if(data.category[0] == tmp.scope && tmp.role == "customer"){
-        notif.responseCode = 200;
-        notif.message = "Hello World,"+tmp.profile+","+tmp.role;
-      }else{
-        notif.responseCode = 401;
-        notif.message = "Your access is UNAUTHORIZED,"+tmp.profile+" "+tmp.role;
+      let url = 'http://dev3.dansmultipro.co.id/api/recruitment/positions.json';
+      if(data.description === undefined && data.location === undefined){
+        url = url;
+      }else if(data.description === 'empty' || !data.description && data.location){
+        url = url+'?location='+data.location;
+      }else if(data.location === 'empty' || !data.location && data.description){
+         url = url+'?description='+data.description;
+      }else if(data.description !== 'empty' && data.location !== 'empty'){
+        url = url+'?description='+data.description+'&location='+data.location;
       }
+      // if(data.description == "empty" ){
+      //   // Request with param =========
+      //   console.log("COBAAA", url+'?description='+data.description+'&location='+data.location)
+      //   // url+'?description='+data.description+'&location='+data.location
+      // }else{
+      //   // Request without param ========
+        
+      // }
+      console.log("testing", url)
+      axios
+        .get(url)
+        .then(resax => {
+          notif = {};
+          notif.responseCode = resax.status;
+          notif.message = "Hi "+tmp.profile+", this is your request result";
+          notif.data = resax.data;
+        })
+        .catch(error => {
+          notif = {};
+          console.error(error);
+          notif.responseCode = 500;
+          notif.message = error;
+        });
+      // if(data.category[0] == tmp.scope && tmp.role == "admin"){
+      //   notif.responseCode = 200;
+      //   notif.message = "Hello World,"+tmp.profile+","+tmp.role;
+      // }else if(data.category[0] == tmp.scope && tmp.role == "customer"){
+      //   notif.responseCode = 200;
+      //   notif.message = "Hello World,"+tmp.profile+","+tmp.role;
+      // }else{
+      //   notif.responseCode = 401;
+      //   notif.message = "Your access is UNAUTHORIZED,"+tmp.profile+" "+tmp.role;
+      // }
     }
     resolve(notif);
   })

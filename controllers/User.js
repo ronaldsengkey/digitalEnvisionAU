@@ -4,11 +4,35 @@ var utils = require('../utils/writer.js');
 var User = require('../service/UserService');
 
 
+module.exports.jobDetail = function jobDetail(req, res, next, body) {
+  let bearerToken = req.headers['authorization'].split(/\s/);
+  body = {};
+  body.jobId = req.openapi.pathParams.id;
+  body.apiKey = req.headers['x-api-key'];
+  body.token = bearerToken;
+  User.jobDetail(body)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+}
+
 module.exports.home = function home(req, res, next, body) {
   let bearerToken = req.headers['authorization'].split(/\s/);
   body = {};
-  body.type = req.query['type'],
-    body.category = req.query['category'],
+  console.log(req.path)
+  if(req.query['description'] == ''){
+    body.description = 'empty';
+  }else{
+    body.description = req.query['description']
+  }
+  if(req.query['location'] == ''){
+    body.location = 'empty';
+  }else{
+    body.location = req.query['location']
+  }
     body.apiKey = req.headers['x-api-key'];
   body.token = bearerToken;
   User.home(body)
