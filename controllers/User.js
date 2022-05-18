@@ -20,9 +20,8 @@ module.exports.jobDetail = function jobDetail(req, res, next, body) {
 }
 
 module.exports.home = function home(req, res, next, body) {
-  let bearerToken = req.headers['authorization'].split(/\s/);
   body = {};
-  console.log(req.path)
+  let bearerToken = req.headers['authorization'].split(/\s/);
   if(req.query['description'] == ''){
     body.description = 'empty';
   }else{
@@ -42,6 +41,35 @@ module.exports.home = function home(req, res, next, body) {
     .catch(function (response) {
       utils.writeJson(res, response);
     });
+}
+
+
+module.exports.getUser = function getUser(req, res, next, body) {
+  let bearerToken = req.headers['authorization'].split(/\s/);
+  body = {};
+  if(req.query['id'] !== undefined){
+    body.jobId = req.query['id'];
+  }
+  body.type = req.query['type'];
+  body.category = req.query['category'];
+  body.apiKey = req.headers['x-api-key'];
+  body.token = bearerToken;
+
+  if (body.type == "personal" && body.category == "customer") {
+    var notif = {
+      "responseCode": 601,
+      "message": "Unaccepted request !"
+    };
+    utils.writeJson(res, notif);
+  } else {
+    User.getUser(body)
+      .then(function (response) {
+        utils.writeJson(res, response);
+      })
+      .catch(function (response) {
+        utils.writeJson(res, response);
+      });
+  }
 }
 
 
@@ -79,6 +107,26 @@ module.exports.createUser = function createUser(req, res, next, body) {
       });
   }
 };
+
+
+module.exports.updateUser = function updateUser(req, res, next, body) {
+  let bearerToken = req.headers['authorization'].split(/\s/);
+  body.apiKey = req.headers['x-api-key'];
+  body.type = req.query['type'];
+  body.category = req.query['category'];
+  body.token = bearerToken;
+  if(req.query['id'] !== undefined){
+    body.id = req.query['id']
+  }
+  User.updateUser(body)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
 
 
 module.exports.userLogin = function userLogin(req, res, next, body) {

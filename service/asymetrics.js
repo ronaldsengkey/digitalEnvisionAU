@@ -15,6 +15,7 @@ function generateToken(data, aesKey = aes_key, iv = aes_iv) {
         dg = data;
     }
     let coba = encryptAes(JSON.stringify({
+        id: dg.id,
         profile: dg.fullName,
         scope: [dg.category],
         type: dg.type,

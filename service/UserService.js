@@ -31,15 +31,51 @@ class operations {
     this.data = data;
   }
   readOperations() {
+    switch (this.data.actions){
+      case "getAllUser":
+        let su = "SELECT * FROM users ";
+        return new Promise((resolve, reject) => {
+          accountDb.all(su, function (err, rows) {
+            if (err) {
+              console.log(err.message);
+              reject(console.error(err.message));
+            } else {
+              resolve(rows);
+            }
+          })
+        });
+    }
+  }
 
+  updateOperations(){
+    switch (this.data.actions){
+      case "updateProfile":
+        let su = "UPDATE users SET fullName = '" + this.data.fullName + 
+        "', birthDay = '" + this.data.birthDay +
+        "', phone = '" + this.data.phone +
+        "', pin ='" + this.data.pin +"' WHERE id = "+this.data.id+"";
+        
+        console.log("calling", this.data);
+        return new Promise((resolve, reject) => {
+          accountDb.run(su, function (err, rows) {
+            if (err) {
+              console.log("DISINI ::", err.message);
+              reject(console.error(err.message));
+            } else {
+              console.log("called")
+              resolve(200);
+            }
+          })
+        });
+    }
   }
   createOperations() {
     switch (this.data.actions) {
       case "register":
-        accountDb.run("create table if not exists users(id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT, phone TEXT, pin TEXT, type TEXT, category TEXT, role TEXT, token TEXT)");
-        let cu = "INSERT INTO users (fullName, phone, pin, type, category, role, token)VALUES ( ?, ?, ?, ?, ?, ?, ?) RETURNING *";
+        accountDb.run("create table if not exists users(id INTEGER PRIMARY KEY AUTOINCREMENT, fullName TEXT, birthDay TEXT, phone TEXT, pin TEXT, type TEXT, category TEXT, role TEXT)");
+        let cu = "INSERT INTO users (fullName, birthDay, phone, pin, type, category, role)VALUES ( ?, ?, ?, ?, ?, ?, ?) RETURNING *";
         return new Promise((resolve, reject) => {
-          accountDb.run(cu, [this.data.fullName, this.data.phone, this.data.pin, this.data.type, this.data.category, this.data.role, this.data.token], (err) => {
+          accountDb.run(cu, [this.data.fullName, this.data.birthDay, this.data.phone, this.data.pin, this.data.type, this.data.category, this.data.role], (err) => {
             if (err) {
               console.log(err.message);
               reject(console.error(err.message));
@@ -79,6 +115,45 @@ class operations {
     }
   }
 }
+
+
+exports.updateUser = function (data) {
+  return new Promise(function (resolve, reject) {
+    let actionAuth = data;
+    actionAuth.actions = "token";
+    let opv = new operations(actionAuth);
+    let resultToken = opv.validations();
+    if(resultToken == 401){
+        notif = {};
+        notif.responseCode = 401;
+        notif.message = "Unauthorized access !";
+        resolve(notif);
+    }else{
+      let hasil = asymetric.decryptAes(resultToken.profile);
+      let tmp = JSON.parse(hasil);
+      data.actions = "updateProfile";
+      if(data.id === undefined){
+        data.id = tmp.id;
+      }
+       let opu = new operations(data);
+      let ropu = opu.updateOperations();
+      ropu.then(values => {
+        if (values == 200) {
+          resolve({
+            "responseCode": 200,
+            "message":  "Hi, "+tmp.profile+" your update has been success !"
+          });
+        } else {
+          resolve({
+            "responseCode": 500,
+            "message": "Internal server error"
+          });
+        }
+      })
+    }
+  })
+}
+
 
 
 exports.jobDetail = function (data) {
@@ -210,13 +285,52 @@ exports.userLogin = function (data) {
   })
 }
 
+exports.getUser = function (data) {
+  return new Promise(function (resolve, reject) {
+    let actionAuth = data;
+    actionAuth.actions = "token";
+    let opv = new operations(actionAuth);
+    let resultToken = opv.validations();
+    if(resultToken == 401){
+        notif = {};
+        notif.responseCode = 401;
+        notif.message = "Unauthorized access !";
+        resolve(notif);
+    }else{
+
+      let hasil = asymetric.decryptAes(resultToken.profile);
+      let tmp = JSON.parse(hasil);
+      data.actions = "getAllUser";
+       let opru = new operations(data);
+      let ropru = opru.readOperations();
+      ropru.then(values => {
+        if (values.length > 0) {
+          resolve({
+            "responseCode": 200,
+            "message":  "Hi, "+tmp.profile+" your update has been success !",
+            "data":values
+          });
+        } else {
+          resolve({
+            "responseCode": 500,
+            "message": "Internal server error"
+          });
+        }
+      })
+
+    }
+  })
+}
+
+
 exports.createUser = function (body) {
   return new Promise(function (resolve, reject) {
-    console.log("CALLED")
     let actionToken = body;
     actionToken.actions = "token";
     let op = new operations(actionToken);
     let resultToken = op.generate();
+    let hasil = asymetric.decryptAes(resultToken.profile);
+    let tmp = JSON.parse(hasil);
     if (resultToken.token) {
       let actionOpc = body;
       actionOpc.actions = "register",
@@ -227,7 +341,7 @@ exports.createUser = function (body) {
         if (values == 200) {
           resolve({
             "responseCode": 200,
-            "message": "Success !"
+            "message": "Hi, your create has been success !"
           });
         } else {
           resolve({

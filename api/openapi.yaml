@@ -9,16 +9,133 @@ servers:
   - url: https://petstore.swagger.io/v2
   - url: http://localhost/api/v1
 tags:
-  - name: meetUsers
+  - name: user
     description: "Operations about users account (customer, partner, employee)"
-  - name: meetAuthentications
-    description: "Handling authentication request (customer, partner, employee)"
-  - name: meetTransactions
-    description: "operations and access to transactions (orders, and payment)"
-  - name: meetServices
-    description: Operations about all of meetup services
+  - name: notif
+    description: "Handling notification request (customer, partner, employee)"
+  - name: recruitment
+    description: "operations and access to recruitment (get information)"
 paths:
+
+  /notif:
+    get:
+      tags:
+        - notif
+      summary: Get notif
+      description: This can only be done by the logged in user.
+      operationId: getNotif
+      parameters:
+        - name: id
+          in: query
+          description: notif id
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          description: key access
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - bearerAuth: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: Notif
+
+
+    post:
+      tags:
+        - notif
+      summary: Create notification
+      description: This can only be done by the logged in user.
+      operationId: createNotif
+      parameters:
+        - name: x-api-key
+          in: header
+          description: key access
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: string
+      requestBody:
+        description: Created user object
+        content:
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - bearerAuth: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: Notif
+
   /user:
+    get:
+      tags:
+        - user
+      summary: Get user
+      description: This can only be done by the logged in user.
+      operationId: getUser
+      parameters:
+        - name: id
+          in: query
+          description: to validate if id has true the operation would be for another users else self service 
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Tipe data yang di request
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - personal
+                - company
+              default: personal
+        - name: category
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - partner
+                - employee
+              default: customer
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - api_key: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: User
+
     post:
       tags:
         - user
@@ -70,10 +187,72 @@ paths:
         - api_key: []
       x-codegen-request-body-name: body
       x-swagger-router-controller: User
+
+    put:
+      tags:
+        - user
+      summary: Update user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+        - name: type
+          in: query
+          description: Tipe data yang di request
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - personal
+                - company
+              default: personal
+        - name: category
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - partner
+                - employee
+              default: customer
+        - name: id
+          in: query
+          description: param to ditermine if id has value equals edit for another user
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+      requestBody:
+        description: update user object
+        content:
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      security:
+        - api_key: []
+        - bearerAuth: []
+      x-codegen-request-body-name: body
+      x-swagger-router-controller: User
+
   /recruitment/positions.json:
     get:
       tags:
-        - user
+        - recruitment
       summary: Create user
       description: This can only be done by the logged in user.
       operationId: home
@@ -87,16 +266,6 @@ paths:
           explode: true
           schema:
             type: string
-            # items:
-            #   type: string
-            #   enum:
-            #     - java
-            #     - javascript
-            #     - golang
-            #     - nodejs
-            #     - php
-            #     - python
-            #   default: nodejs
         - name: location
           in: query
           description: Status values that need to be considered for filter
@@ -121,10 +290,11 @@ paths:
         - bearerAuth: []
       x-codegen-request-body-name: body
       x-swagger-router-controller: User
+
   /recruitment/positions/{id}:
     get:
       tags:
-        - user
+        - recruitment
       summary: Create user
       description: This can only be done by the logged in user.
       operationId: jobDetail
