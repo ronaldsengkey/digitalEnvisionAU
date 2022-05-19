@@ -10,6 +10,17 @@ var http = require('http');
 var oas3Tools = require('oas3-tools');
 var serverPort = process.env.SERVICE_PORT;
 
+let notif = require('./service/NotifService');
+
+
+const schedule = require('node-schedule');
+const job = schedule.scheduleJob('sendNotif','* 57 8 * * 0-6', function(){
+  let test = notif.sendNotif();
+  test.then(values => {
+    console.log('The answer to life!', values);
+  })
+});
+
 // swaggerRouter configuration
 var options = {
     routing: {

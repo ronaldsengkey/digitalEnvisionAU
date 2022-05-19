@@ -7,6 +7,7 @@
 // } = require('domain');
 
 const axios = require('axios');
+const moment = require('moment');
 let notif= {};
 
 var path = require('path');
@@ -42,6 +43,49 @@ class operations {
               reject(console.error(err.message));
             } else {
               resolve(rows);
+            }
+          })
+        });
+      case "readBirthDay":
+        // let cksn = "SELECT userTarget FROM sendNotif WHERE status = 'success'"
+        let rb = "SELECT * FROM users";
+        return new Promise((resolve, reject) => {
+          accountDb.all(rb, function (err, rows) {
+            if (err) {
+              console.log(err.message);
+              reject(console.error(err.message));
+            } else {
+              let data = [];
+              let rnd = {};
+              rnd.actions = "readNotif";
+              rnd.category = "birthday";
+              let oprn = new operations(rnd);
+              let roprn = oprn.readOperations();
+              roprn.then(vroprn => {
+              if (vroprn.length > 0) {
+                // console.log("SUKSES ::", vroprn);
+                let csn = {};
+                for(let a=0; a < rows.length; a++){
+                  let tgl = moment(rows[a].birthDay, "DD-MM-YYYY").format('DD');
+                  let month = moment(rows[a].birthDay, "DD-MM-YYYY").format('M');
+                  let today = new Date().getDate();
+                  let tm = new Date().getMonth()+ 1;
+                  if(tgl == today && month == tm ){
+                    for(let b=0; b < vroprn.length; b++){
+                      csn.notif = rows[a].fullName+', '+vroprn[b].contentText;
+                      csn.userTarget = rows[a].phone;
+                      csn.type = "waNotif";
+                      data.push(csn);
+                    }
+                  }else{
+                    return false;
+                  }
+                }
+                resolve(data);
+              } else {
+                console.log("GAGAL");
+              }
+            })
             }
           })
         });
@@ -95,10 +139,11 @@ class operations {
           })
         });
       case "sendNotif":
-        accountDb.run("create table if not exists sendNotif(id INTEGER PRIMARY KEY AUTOINCREMENT, notif TEXT, targetUser INTEGER, type TEXT, status TEXT, sendDate TEXT, resendDate)");
+        console.log("CALLED ::", this.data);
+        accountDb.run("create table if not exists sendNotif(id INTEGER PRIMARY KEY AUTOINCREMENT, notif TEXT, userTarget TEXT, type TEXT, status TEXT, sendDate TEXT, resendDate TEXT)");
         let csn = "INSERT INTO sendNotif (notif, userTarget, type, status, sendDate)VALUES ( ?, ?, ?, ?, ?) RETURNING *";
         return new Promise((resolve, reject) => {
-          accountDb.run(csn, [this.data.notif, this.data.userTarget, this.data.type, this.data.status, datetime('now', 'localtime')], (err) => {
+          accountDb.run(csn, [this.data.notif, this.data.userTarget, this.data.type, this.data.status, moment().format("DD-MM-YYYY")], (err) => {
             if (err) {
               console.log(err.message);
               reject(console.error(err.message));
@@ -138,6 +183,53 @@ class operations {
     }
   }
 }
+
+
+exports.sendNotif = function () {
+  return new Promise(function (resolve, reject) {
+    let data = {};
+    data.actions = "readBirthDay";
+    let opb = new operations(data);
+    let ropb = opb.readOperations();
+     ropb.then(values => {
+        if (values.length > 0) {
+          for(let snc = 0; snc < values.length; snc++){
+            values[snc].actions = 'sendNotif'; 
+            axios({
+                method: 'post',
+                url: 'https://hookb.in/qB2XzDlM2jHnaNVqL2z8',
+                data: JSON.stringify(values[snc])
+              }).then(response => {
+                if(response.status == 200){
+                  values[snc].status = "success";
+                  let opsn2 = new operations(values[snc]);
+                  let ropsn2 = opsn2.createOperations();
+                  ropsn2.then(values2 =>{
+                    console.log("SUCESS ::", snc, values2)
+                  })
+                }
+              }).catch(err => {
+                values[snc].status = "failed";
+                let opsn2 = new operations(values[snc]);
+                let ropsn2 = opsn2.createOperations();
+                ropsn2.then(values2 =>{
+                  console.log("SUCESS ::", snc, values2)
+                })
+                console.log("EROR WOI==", err)
+              });
+          }
+
+        } else {
+          resolve({
+            "responseCode": 500,
+            "message": "Internal server error"
+          });
+        }
+      })
+
+  })
+}
+
 
 
 exports.getNotif = function (data) {

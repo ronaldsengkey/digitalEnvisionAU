@@ -54,8 +54,6 @@ class operations {
         "', birthDay = '" + this.data.birthDay +
         "', phone = '" + this.data.phone +
         "', pin ='" + this.data.pin +"' WHERE id = "+this.data.id+"";
-        
-        console.log("calling", this.data);
         return new Promise((resolve, reject) => {
           accountDb.run(su, function (err, rows) {
             if (err) {
@@ -95,7 +93,9 @@ class operations {
         let sta = asymetric.jwtVerify(this.data.token[1]);
         return sta;
       case "authentication":
-        let su = "SELECT * FROM users where phone = '" + this.data.credential.phone + "' AND pin ='" + this.data.credential.pin + "' AND type = '" + this.data.type[0] + "' AND category = '" + this.data.category[0] + "'";
+        let su = "SELECT * FROM users where phone = '" + this.data.credential.phone +
+        "' AND pin ='" + this.data.credential.pin + "' AND type = '" + this.data.type[0] +
+        "' AND category = '" + this.data.category[0] + "'";
         return new Promise((resolve, reject) => {
           accountDb.all(su, function (err, rows) {
             if (err) {
@@ -325,16 +325,8 @@ exports.getUser = function (data) {
 
 exports.createUser = function (body) {
   return new Promise(function (resolve, reject) {
-    let actionToken = body;
-    actionToken.actions = "token";
-    let op = new operations(actionToken);
-    let resultToken = op.generate();
-    let hasil = asymetric.decryptAes(resultToken.profile);
-    let tmp = JSON.parse(hasil);
-    if (resultToken.token) {
-      let actionOpc = body;
-      actionOpc.actions = "register",
-        actionOpc.token = resultToken.token;
+    let actionOpc = body;
+      actionOpc.actions = "register";
       let opc = new operations(actionOpc);
       let ropc = opc.createOperations();
       ropc.then(values => {
@@ -349,9 +341,8 @@ exports.createUser = function (body) {
             "message": "Internal server error"
           });
         }
-      })
-    }
   });
+})
 }
 
 
